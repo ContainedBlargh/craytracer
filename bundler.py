@@ -1,7 +1,6 @@
 # Sometimes it just makes sense to bundle up all your C program code into a single file before compiling.
 # The reason we do this is to avoid multiple definitions when using macros to define generics.
 
-from collections import defaultdict
 from io import FileIO
 import sys
 import os
