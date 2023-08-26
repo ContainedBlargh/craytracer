@@ -158,9 +158,17 @@ def main():
     )
     ap.add_argument("output_path", help="Path to the output bundled C file.")
     args = ap.parse_args()
-    g = construct_network(DiGraph(), CObject(args.main_path, True))
-    with open(args.output_path, "w") as fp:
+    abs_output_path = os.path.abspath(args.output_path)
+    abs_main_path = os.path.abspath(args.main_path)
+
+    old_dir = os.getcwd()
+    new_dir = os.path.dirname(args.main_path)
+
+    os.chdir(new_dir)
+    g = construct_network(DiGraph(), CObject(abs_main_path, True))
+    with open(abs_output_path, "w") as fp:
         bundle_source(g, fp)
+    os.chdir(old_dir)
     
 
 if __name__ == "__main__":
