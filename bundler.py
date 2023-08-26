@@ -156,6 +156,7 @@ def main():
         help="The path to the file that contains your C `main` function.",
     )
     ap.add_argument("output_path", help="Path to the output bundled C file.")
+    ap.add_argument('-v', '--visualize', action='store_true', help='Visualize the structure of your code.')
     args = ap.parse_args()
     abs_output_path = os.path.abspath(args.output_path)
     abs_main_path = os.path.abspath(args.main_path)
@@ -164,11 +165,19 @@ def main():
     new_dir = os.path.dirname(args.main_path)
 
     os.chdir(new_dir)
-    g = construct_network(DiGraph(), CObject(abs_main_path, True))
+    G = construct_network(DiGraph(), CObject(abs_main_path, True))
+
     with open(abs_output_path, "w") as fp:
-        bundle_source(g, fp)
-    os.chdir(old_dir)
+        bundle_source(G, fp)
     
+    os.chdir(old_dir)
+    if args.visualize:
+        pos = graphviz_layout(G, prog='dot')
+        plt.figure(figsize=(15, 12))
+        nx.draw(G, pos, with_labels=True, node_size=1500, font_size=9, node_color='skyblue', arrows=True)
+        plt.title("Your Code Structure")
+        plt.savefig("bundle.png")
+        print("Saved a code visualization to bundle.png")    
 
 if __name__ == "__main__":
     main()
