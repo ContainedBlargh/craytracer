@@ -14,7 +14,7 @@
 
 #include "vec3.h"
 
-typedef struct _Ray
+typedef struct __attribute__((packed)) _Ray
 {
     Vec3 origin;
     Vec3 direction;

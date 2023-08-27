@@ -22,4 +22,6 @@ bool char_in_string(char* string, char character);
  */
 void char_replace(char* string, char before, char after);
 
+char *read_file(char* path);
+
 #endif

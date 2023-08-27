@@ -14,12 +14,15 @@
 
 #include "sphere.h"
 #include "camera.h"
+#include "light.h"
 
 typedef struct _Scene Scene;
 
-Scene* new_scene(Camera *camera);
+Scene* new_scene();
+void scene_set_camera(Scene *scene, Camera *camera);
 void scene_add_sphere(Scene *scene, Sphere *sphere);
+void scene_add_light(Scene *scene, Light light);
 HitOption scene_intersect(Scene *scene, Ray *ray);
 void scene_free(Scene *scene);
-
+void scene_debug_print(Scene *scene);
 #endif

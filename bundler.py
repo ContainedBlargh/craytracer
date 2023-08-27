@@ -83,6 +83,8 @@ def construct_network(
     if not current.is_local or (G.has_node(current) and G.out_degree(current) > 0):
         return G
     
+    context_location = os.path.dirname(os.path.abspath(current.path))
+    os.chdir(context_location)
     deps = []
     with open(current.path) as fp:
         deps += direct_dependencies(fp)
@@ -109,8 +111,6 @@ def bundle_source(G: DiGraph, fp: FileIO):
         else:
             layered_nodes[count].append(node)
 
-    view_layered_nodes = [', '.join(map(str, layered_nodes[layer])) for layer in layered_nodes]
-    
     gbl_includes = set()
 
     def filter_line_by_line(in_fp: FileIO, out_fp: FileIO):
@@ -165,7 +165,8 @@ def main():
     new_dir = os.path.dirname(args.main_path)
 
     os.chdir(new_dir)
-    G = construct_network(DiGraph(), CObject(abs_main_path, True))
+    rel_main_path = os.path.relpath(abs_main_path)
+    G = construct_network(DiGraph(), CObject(rel_main_path, True))
 
     with open(abs_output_path, "w") as fp:
         bundle_source(G, fp)

@@ -9,7 +9,7 @@
 #include <SDL2/SDL.h>
 #include "scene.h"
 
-#define CPU_COUNT 6
+static u8 cpu_count = 6;
 
 typedef struct _RayWorkerArgs
 {
@@ -41,7 +41,7 @@ int fire_rays(void *args) {
         for (u32 j = 0; j < 3; j++) {
             hit_ = scene_intersect(scene, rays + i + j);
             if (is_some(hit_)) {
-                raster[i + j] = hit_.value.color;
+                raster[i + j] = color_to_pixel(hit_.value.color);
             }
         }
         SDL_UnlockSurface(canvas);
@@ -69,25 +69,26 @@ int render(void *args)
     SDL_Window *window = rargs->window;
     SDL_Surface *window_surface = rargs->window_surface;
     SDL_Surface *canvas = rargs->canvas;
-    SDL_PixelFormat *fmt = canvas->format;
 
     Camera *camera = new_camera(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
     Ray *rays = setup_perspective_rays(camera, canvas->w, canvas->h);
-    Scene *scene = new_scene(camera);
-    scene_add_sphere(scene, new_sphere(vec3(-0.4, 0.0, 2.0), 0.5, SDL_MapRGB(fmt, 0, 0, 255)));
-    scene_add_sphere(scene, new_sphere(vec3(0.4, 0.0, 2.2), 0.5, SDL_MapRGB(fmt, 0, 255, 0)));
-    scene_add_sphere(scene, new_sphere(vec3(0.0, 0.4, 2.1), 0.5, SDL_MapRGB(fmt, 255, 0, 0)));
+    Scene *scene = new_scene();
+    scene_set_camera(scene, camera);
+    scene_add_sphere(scene, new_sphere(vec3(-0.4, 0.0, 2.0), 0.5, vec3(0, 0, 1.0)));
+    scene_add_sphere(scene, new_sphere(vec3(0.4, 0.0, 2.2), 0.5, vec3(0, 1, 0)));
+    scene_add_sphere(scene, new_sphere(vec3(0.0, 0.4, 2.1), 0.5, vec3(1, 0, 0)));
+    scene_add_light(scene, (Light){.color = vec3(0.3, 0.1, 0.1), .position = vec3(3.5, 0.75, 0)});
 
-    SDL_Thread **workers = calloc(CPU_COUNT, sizeof(SDL_Thread*));
-    RayWorkerArgs *wargs = calloc(CPU_COUNT, sizeof(RayWorkerArgs));
+    SDL_Thread **workers = calloc(cpu_count, sizeof(SDL_Thread*));
+    RayWorkerArgs *wargs = calloc(cpu_count, sizeof(RayWorkerArgs));
     u32 canvas_size = canvas->w * canvas->h;
-    u32 parallelism = canvas_size / CPU_COUNT;
+    u32 parallelism = canvas_size / cpu_count;
     printf("Parallelism: %u rays per thread.\n", parallelism);
-    char **names = calloc(CPU_COUNT, sizeof(char*));
-    for (u32 i = 0; i < CPU_COUNT; i++) {
+    char **names = calloc(cpu_count, sizeof(char*));
+    for (u32 i = 0; i < cpu_count; i++) {
         wargs[i].id = i;
         wargs[i].offset = i * parallelism;
-        wargs[i].amount = i < CPU_COUNT - 1 ? parallelism : canvas_size - i * parallelism;
+        wargs[i].amount = i < cpu_count - 1 ? parallelism : canvas_size - i * parallelism;
         wargs[i].canvas = canvas;
         wargs[i].rays = rays;
         wargs[i].scene = scene;
@@ -101,11 +102,12 @@ int render(void *args)
         if (SDL_AtomicGet(buffer_switched)) {
             window_surface = SDL_GetWindowSurface(window);
             SDL_BlitScaled(canvas, NULL, window_surface, NULL);
-            SDL_UpdateWindowSurface(window);
             SDL_AtomicSet(buffer_switched, false);
         }
+        SDL_BlitScaled(canvas, NULL, window_surface, NULL);
+        SDL_UpdateWindowSurface(window);
     }
-    for (u32 i = 0; i < CPU_COUNT; i++) {
+    for (u32 i = 0; i < cpu_count; i++) {
         SDL_WaitThread(workers[i], NULL);
         free(names[i]);
     }
@@ -119,6 +121,14 @@ int render(void *args)
 
 int main(int argc, char *argv[])
 {
+    u32 w = 0, h = 0;
+    if (argc >= 4) {
+        w = atoi(argv[1]);
+        h = atoi(argv[2]);
+        cpu_count = SDL_clamp(atoi(argv[3]), 1, 12);
+    }
+    w = w < 1 ? 1024: w;
+    h = h < 1 ? 768: h;
     SDL_atomic_t *running = malloc(sizeof(SDL_atomic_t));
     running->value = true;
     SDL_atomic_t *buffer_switched = malloc(sizeof(SDL_atomic_t));
@@ -139,11 +149,14 @@ int main(int argc, char *argv[])
     }
     SDL_Surface *canvas = SDL_CreateRGBSurfaceWithFormat(
         0, 
-        1920, 
-        1080, 
+        w, 
+        h, 
         32, 
         SDL_PIXELFORMAT_RGB888
     );
+    SDL_PixelFormat *fmt = canvas->format;
+    // Awful casting, but silences the warnings.
+    color_register_format(fmt, (u32 (*)(void *, u8,  u8,  u8))&SDL_MapRGB);
     RenderArgs *rargs = malloc(sizeof(RenderArgs));
     rargs->buffer_switched = buffer_switched;
     rargs->running = running;

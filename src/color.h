@@ -12,7 +12,12 @@
  * 
  */
 #include "defs.h"
+#include "vec3.h"
 
-#define rgb
+typedef Vec3 Color;
+
+Color color_mix(Color a, Color b);
+void color_register_format(void *fmt, u32 (*fun)(void *fmt, u8 r, u8 g, u8 b));
+u32 color_to_pixel(Color color);
 
 #endif

@@ -18,7 +18,7 @@
 
 typedef struct __attribute__((packed)) _Hit
 {
-    u32 color;
+    Color color;
     f32 distance;
     Vec3 position;
     Vec3 norm;

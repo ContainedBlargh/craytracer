@@ -1,6 +1,6 @@
 #include "sphere.h"
 
-Sphere *new_sphere(Vec3 center, f32 radius, u32 color)
+Sphere *new_sphere(Vec3 center, f32 radius, Color color)
 {
     Sphere *sphere = malloc(sizeof(Sphere));
     sphere->center = center;
@@ -11,10 +11,10 @@ Sphere *new_sphere(Vec3 center, f32 radius, u32 color)
 
 /**
  * @brief Compute the intersect between a sphere and a ray.
- * 
+ *
  * @param sphere A sphere.
  * @param ray A ray.
- * @return HitOption An option of the Hit-persuasion. 
+ * @return HitOption An option of the Hit-persuasion.
  */
 HitOption sphere_intersect(Sphere *sphere, Ray *ray)
 {
@@ -27,6 +27,11 @@ HitOption sphere_intersect(Sphere *sphere, Ray *ray)
     f32 distance = dist(moved, sphere->center);
 
     return distance > sphere->radius
-               ? no_Hit()
-               : some_Hit((Hit){.color = sphere->color, .distance = distance, .norm = norm(moved), .position = moved});
+        ? no_Hit()
+        : some_Hit((Hit) {
+            .color = sphere->color, 
+            .distance = distance, 
+            .norm = norm(moved), 
+            .position = moved
+        });
 }

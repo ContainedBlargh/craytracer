@@ -48,3 +48,11 @@ Vec3 cross(Vec3 a, Vec3 b) {
         a.x * b.y - a.y * b.x
     );
 }
+
+Vec3 vabs(Vec3 v) {
+    return vec3(
+        fabsf(v.x),
+        fabsf(v.y),
+        fabsf(v.z)
+    );
+}

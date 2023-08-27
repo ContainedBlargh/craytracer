@@ -14,7 +14,7 @@
 
 #include "defs.h"
 
-typedef struct _Vec3
+typedef struct __attribute__((packed)) _Vec3
 {
     f32 x;
     f32 y;
@@ -38,5 +38,7 @@ Vec3 vadd(Vec3 a, Vec3 b);
 Vec3 vsub(Vec3 a, Vec3 b);
 
 Vec3 cross(Vec3 a, Vec3 b);
+
+Vec3 vabs(Vec3 v);
 
 #endif

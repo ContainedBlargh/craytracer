@@ -15,15 +15,16 @@
 #include "vec3.h"
 #include "hit.h"
 #include "ray.h"
+#include "color.h"
 
 typedef struct _Sphere
 {
     Vec3 center;
     f32 radius;
-    u32 color;
+    Color color;
 } Sphere;
 
-Sphere* new_sphere(Vec3 center, f32 radius, u32 color);
+Sphere* new_sphere(Vec3 center, f32 radius, Color color);
 
 HitOption sphere_intersect(Sphere *sphere, Ray *ray);
 
