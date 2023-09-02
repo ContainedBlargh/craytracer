@@ -8,6 +8,12 @@
 #include "camera.h"
 #include <SDL2/SDL.h>
 #include "scene.h"
+#include "parser.h"
+#ifdef __linux__
+#include <unistd.h>
+#else
+#include <getopt.h>
+#endif
 
 static u8 cpu_count = 6;
 
@@ -15,8 +21,8 @@ typedef struct _RayWorkerArgs
 {
     u16 id;
     SDL_Surface *canvas;
-    u32 offset;
-    u32 amount;
+    u64 offset;
+    u64 amount;
     Ray *rays;
     Scene *scene;
 } RayWorkerArgs;
@@ -29,13 +35,13 @@ int fire_rays(void *args) {
     Ray *rays = wargs->rays;
     Scene *scene = wargs->scene;
     
-    u32 offset = wargs->offset;
-    u32 amount = wargs->amount;
+    u64 offset = wargs->offset;
+    u64 amount = wargs->amount;
 
     u32 *raster = canvas->pixels;
     
     HitOption hit_;
-    printf("rw[%hu]: Ready.\n", wargs->id);
+    printf("rw[%hu]: Firing %llu rays.\n", wargs->id, amount);
     for (u32 i = offset; i < offset + amount; i += 3) {
         SDL_LockSurface(canvas);
         for (u32 j = 0; j < 3; j++) {
@@ -52,6 +58,7 @@ int fire_rays(void *args) {
 
 typedef struct _RenderArgs
 {
+    Scene *scene;
     SDL_atomic_t *running;
     SDL_atomic_t *buffer_switched;
     SDL_Surface *canvas;
@@ -70,31 +77,27 @@ int render(void *args)
     SDL_Surface *window_surface = rargs->window_surface;
     SDL_Surface *canvas = rargs->canvas;
 
-    Camera *camera = new_camera(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
+    Scene *scene = rargs->scene;
+    Camera *camera = scene_get_camera(scene); // new_camera(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
     Ray *rays = setup_perspective_rays(camera, canvas->w, canvas->h);
-    Scene *scene = new_scene();
-    scene_set_camera(scene, camera);
-    scene_add_sphere(scene, new_sphere(vec3(-0.4, 0.0, 2.0), 0.5, vec3(0, 0, 1.0)));
-    scene_add_sphere(scene, new_sphere(vec3(0.4, 0.0, 2.2), 0.5, vec3(0, 1, 0)));
-    scene_add_sphere(scene, new_sphere(vec3(0.0, 0.4, 2.1), 0.5, vec3(1, 0, 0)));
-    scene_add_light(scene, (Light){.color = vec3(0.3, 0.1, 0.1), .position = vec3(3.5, 0.75, 0)});
+    scene_debug_print(scene);
+
 
     SDL_Thread **workers = calloc(cpu_count, sizeof(SDL_Thread*));
-    RayWorkerArgs *wargs = calloc(cpu_count, sizeof(RayWorkerArgs));
-    u32 canvas_size = canvas->w * canvas->h;
-    u32 parallelism = canvas_size / cpu_count;
-    printf("Parallelism: %u rays per thread.\n", parallelism);
-    char **names = calloc(cpu_count, sizeof(char*));
+    RayWorkerArgs **wargs = calloc(cpu_count, sizeof(RayWorkerArgs*));
+    u64 canvas_size = canvas->w * canvas->h;
+    u64 parallelism = canvas_size / ((u64)cpu_count);
+    printf("Parallelism: %llu rays per thread, %llu rays in total.\n", parallelism, canvas_size);
     for (u32 i = 0; i < cpu_count; i++) {
-        wargs[i].id = i;
-        wargs[i].offset = i * parallelism;
-        wargs[i].amount = i < cpu_count - 1 ? parallelism : canvas_size - i * parallelism;
-        wargs[i].canvas = canvas;
-        wargs[i].rays = rays;
-        wargs[i].scene = scene;
-        names[i] = malloc(sizeof(char) * 32);
-        sprintf_s(names[i], 32, "RayWorker %u", i);
-        workers[i] = SDL_CreateThread(fire_rays, names[i], &wargs[i]);
+        RayWorkerArgs *rwargs = malloc(sizeof(RayWorkerArgs));
+        rwargs->id = i;
+        rwargs->offset = i * parallelism;
+        rwargs->amount = i < (cpu_count - 1) ? parallelism : canvas_size - (parallelism * i);
+        rwargs->canvas = canvas;
+        rwargs->rays = rays;
+        rwargs->scene = scene;
+        wargs[i] = rwargs;
+        workers[i] = SDL_CreateThread(fire_rays, NULL, rwargs);
     }
 
     while(SDL_AtomicGet(running))
@@ -109,26 +112,50 @@ int render(void *args)
     }
     for (u32 i = 0; i < cpu_count; i++) {
         SDL_WaitThread(workers[i], NULL);
-        free(names[i]);
     }
-    scene_free(scene);
-    free(names);
     free(rays);
     free(workers);
-
+    for (u32 i = 0; i < cpu_count; i++) {
+        free(wargs[i]);
+    }
+    free(wargs);
     return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    u32 w = 0, h = 0;
-    if (argc >= 4) {
-        w = atoi(argv[1]);
-        h = atoi(argv[2]);
-        cpu_count = SDL_clamp(atoi(argv[3]), 1, 12);
+    int opt;
+    u32 w = 1024, h = 768;
+    char *input_file = NULL;
+
+    while ((opt = getopt(argc, argv, "w:h:c:i:")) != -1) {
+        switch (opt) {
+            case 'w':
+                w = atoi(optarg);
+                break;
+            case 'h':
+                h = atoi(optarg);
+                break;
+            case 'c':
+                cpu_count = atoi(optarg);
+                break;
+            case 'i':
+                input_file = optarg;
+                break;
+            default:
+                fprintf(stderr, "Usage: %s [-w width] [-h height] [-c cpu_count] -i <input_scene.json>\n", argv[0]);
+                exit(EXIT_FAILURE);
+        }
     }
-    w = w < 1 ? 1024: w;
-    h = h < 1 ? 768: h;
+
+    if (input_file == NULL) {
+        fprintf(stderr, "An input file path is required.\n");
+        fprintf(stderr, "Usage: %s [-w width] [-h height] [-c cpu_count] -i <input_scene.json>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    Scene *scene = parse_scene(input_file);
+    scene_debug_print(scene);
     SDL_atomic_t *running = malloc(sizeof(SDL_atomic_t));
     running->value = true;
     SDL_atomic_t *buffer_switched = malloc(sizeof(SDL_atomic_t));
@@ -163,6 +190,7 @@ int main(int argc, char *argv[])
     rargs->canvas = canvas;
     rargs->window_surface = window_surface;
     rargs->window = window;
+    rargs->scene = scene;
     SDL_Thread *render_thread = SDL_CreateThread(render, "RENDER", rargs);
     SDL_Event e;
     while (SDL_AtomicGet(running))
@@ -179,5 +207,6 @@ int main(int argc, char *argv[])
     }
     SDL_WaitThread(render_thread, NULL);
     free(rargs);
+    scene_free(scene);
     return 0;
 }

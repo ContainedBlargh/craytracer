@@ -19,6 +19,7 @@
 typedef struct _Scene Scene;
 
 Scene* new_scene();
+Camera *scene_get_camera(Scene *scene);
 void scene_set_camera(Scene *scene, Camera *camera);
 void scene_add_sphere(Scene *scene, Sphere *sphere);
 void scene_add_light(Scene *scene, Light light);

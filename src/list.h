@@ -107,4 +107,17 @@
         }                                                                                                              \
     }
 
+#define list_debug(ListT, print)                                                                                       \
+    void ListT##_debug(ListT *list)                                                                                    \
+    {                                                                                                                  \
+        printf("[");                                                                                                   \
+        for (u32 i = 0; i < list->size - 1; i++)                                                                       \
+        {                                                                                                              \
+            print(list->elements[i]);                                                                                  \
+            printf(", ");                                                                                              \
+        }                                                                                                              \
+        print(list->elements[list->size - 1]);                                                                         \
+        printf("]");                                                                                                   \
+    }
+
 #endif

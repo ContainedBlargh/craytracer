@@ -2,9 +2,15 @@
 #include "fail.h"
 #include "list.h"
 
+#ifndef SpherePtrList_T
 typedef Sphere *SpherePtr;
 list_type(SpherePtr);
+#define SpherePtrList_T
+#endif
+#ifndef LightList_T
 list_type(Light);
+#define LightList_T
+#endif
 
 typedef struct _Scene
 {
@@ -42,12 +48,12 @@ static HitOption cast_ray(Scene *scene, Ray *ray)
     if (scene->camera == NULL) {
         failwith("No camera set in scene, cannot cast rays!\n");
     }
-    HitOption current_, closest_ = no_Hit();
+    HitOption closest_ = no_Hit();
     f32 closest_dist = 999999.0f;
     for (u16 i = 0; i < scene->spheres->size; i++)
     {
         Sphere *s = scene->spheres->elements[i];
-        current_ = sphere_intersect(s, ray);
+        HitOption current_ = sphere_intersect(s, ray);
         if (is_some(current_) && current_.value.distance < closest_dist)
         {
             closest_ = current_;
@@ -82,13 +88,13 @@ HitOption scene_intersect(Scene *scene, Ray *ray)
         if (!reached_by_light)
         {
             closest_.value.color = vec3(0, 0, 0);
-            printf("ray { o: (%f, %f, %f), d: (%f, %f, %f) } obstructed!\n", shadow_ray->origin.x, shadow_ray->origin.y,
-                   shadow_ray->origin.z, shadow_ray->direction.x, shadow_ray->direction.y, shadow_ray->direction.z);
+            // printf("ray { o: (%f, %f, %f), d: (%f, %f, %f) } obstructed!\n", shadow_ray->origin.x, shadow_ray->origin.y,
+            //        shadow_ray->origin.z, shadow_ray->direction.x, shadow_ray->direction.y, shadow_ray->direction.z);
         }
         else
         {
-            printf("ray { o: (%f, %f, %f), d: (%f, %f, %f) } reached the light!\n", shadow_ray->origin.x, shadow_ray->origin.y,
-                   shadow_ray->origin.z, shadow_ray->direction.x, shadow_ray->direction.y, shadow_ray->direction.z);
+            // printf("ray { o: (%f, %f, %f), d: (%f, %f, %f) } reached the light!\n", shadow_ray->origin.x, shadow_ray->origin.y,
+            //        shadow_ray->origin.z, shadow_ray->direction.x, shadow_ray->direction.y, shadow_ray->direction.z);
         }
         free(shadow_ray);
     }
@@ -106,7 +112,7 @@ void scene_debug_print(Scene *scene)
 {
     printf("Scene debug:\n");
     printf(
-        "\tCamera: {p: (%.2f, %.2f, %.2f), d: (%.2f, %.2f, %.2f) }\n",
+        "\tCamera: { p: (%.2f, %.2f, %.2f), d: (%.2f, %.2f, %.2f) }\n",
         scene->camera->position.x,
         scene->camera->position.y,
         scene->camera->position.z,
@@ -116,7 +122,7 @@ void scene_debug_print(Scene *scene)
     );
     for(u32 i = 0; i < scene->lights->size; i++) {
         printf(
-            "\tLight: {o: (%.2f, %.2f, %.2f), c: (%.2f, %.2f, %.2f) }\n",
+            "\tLight: { o: (%.2f, %.2f, %.2f), c: (%.2f, %.2f, %.2f) }\n",
             scene->lights->elements[i].position.x,
             scene->lights->elements[i].position.y,
             scene->lights->elements[i].position.z,
@@ -125,9 +131,10 @@ void scene_debug_print(Scene *scene)
             scene->lights->elements[i].color.z
         );
     }
+    printf("Scene has %u spheres:\n", scene->spheres->size);
     for(u32 i = 0; i < scene->spheres->size; i++) {
         printf(
-            "\tSphere: {o: (%.2f, %.2f, %.2f), r: %.2f, c: (%.2f, %.2f, %.2f) }\n",
+            "\tSphere: { o: (%.2f, %.2f, %.2f), r: %.2f, c: (%.2f, %.2f, %.2f) }\n",
             scene->spheres->elements[i]->center.x,
             scene->spheres->elements[i]->center.y,
             scene->spheres->elements[i]->center.z,
@@ -137,4 +144,12 @@ void scene_debug_print(Scene *scene)
             scene->spheres->elements[i]->color.z
         );
     }
+}
+
+Camera *scene_get_camera(Scene *scene)
+{
+    if(scene->camera != NULL) {
+        return scene->camera;
+    }
+    failwith("Tried to get camera from scene, but none was available :(\n");
 }
