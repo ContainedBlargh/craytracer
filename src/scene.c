@@ -11,12 +11,18 @@ list_type(SpherePtr);
 list_type(Light);
 #define LightList_T
 #endif
+typedef Plane* PlanePtr;
+#ifndef PlanePtrList_T
+#define PlanePtrList_T
+list_type(PlanePtr);
+#endif
 
 typedef struct _Scene
 {
     Camera *camera;
     LightList *lights;
     SpherePtrList *spheres;
+    PlanePtrList *planes;
 } Scene;
 
 Scene *new_scene()
@@ -25,6 +31,7 @@ Scene *new_scene()
     s->camera = NULL;
     s->lights = new_LightList(4);
     s->spheres = new_SpherePtrList(8);
+    s->planes = new_PlanePtrList(3);
     return s;
 }
 
@@ -43,6 +50,10 @@ void scene_add_light(Scene *scene, Light light)
     LightList_add(scene->lights, light);
 }
 
+void scene_add_plane(Scene *scene, Plane *plane) {
+    PlanePtrList_add(scene->planes, plane);
+}
+
 static HitOption cast_ray(Scene *scene, Ray *ray)
 {
     if (scene->camera == NULL) {
@@ -50,6 +61,14 @@ static HitOption cast_ray(Scene *scene, Ray *ray)
     }
     HitOption closest_ = no_Hit();
     f32 closest_dist = 999999.0f;
+    for (u16 i = 0; i < scene->planes->size; i++)
+    {
+        Plane *p = scene->planes->elements[i];
+        HitOption current_ = plane_intersect(p, ray);
+        if (is_some(current_) && current_.value.distance < closest_dist) {
+            closest_ = current_;
+        }
+    }
     for (u16 i = 0; i < scene->spheres->size; i++)
     {
         Sphere *s = scene->spheres->elements[i];
@@ -59,10 +78,11 @@ static HitOption cast_ray(Scene *scene, Ray *ray)
             closest_ = current_;
         }
     }
+    
     return closest_;
 }
 
-HitOption scene_intersect(Scene *scene, Ray *ray)
+HitOption trace_ray(Scene *scene, Ray *ray)
 {
     if (scene->camera == NULL) {
         failwith("No camera set in scene, cannot cast rays!\n");
@@ -72,13 +92,13 @@ HitOption scene_intersect(Scene *scene, Ray *ray)
     {
         // Compute the color depending on whether we are in darkness or not.
         bool reached_by_light = false;
-        Ray *shadow_ray = malloc(sizeof(Ray));
-        shadow_ray->origin = vadd(closest_.value.position, smul(closest_.value.norm, 0.01));
+        Ray shadow_ray;
+        shadow_ray.origin = vadd(closest_.value.position, smul(closest_.value.norm, 0.01));
         for (u16 i = 0; i < scene->lights->size; i++)
         {
             Light l = scene->lights->elements[i];
-            shadow_ray->direction = norm(vsub(l.position, shadow_ray->origin));
-            HitOption shadow_hit_ = cast_ray(scene, shadow_ray);
+            shadow_ray.direction = norm(vsub(l.position, shadow_ray.origin));
+            HitOption shadow_hit_ = cast_ray(scene, &shadow_ray);
             if (is_none(shadow_hit_))
             {
                 reached_by_light = true;
@@ -87,16 +107,8 @@ HitOption scene_intersect(Scene *scene, Ray *ray)
         }
         if (!reached_by_light)
         {
-            closest_.value.color = vec3(0, 0, 0);
-            // printf("ray { o: (%f, %f, %f), d: (%f, %f, %f) } obstructed!\n", shadow_ray->origin.x, shadow_ray->origin.y,
-            //        shadow_ray->origin.z, shadow_ray->direction.x, shadow_ray->direction.y, shadow_ray->direction.z);
+            closest_.value.color = smul(closest_.value.color, 0.5);
         }
-        else
-        {
-            // printf("ray { o: (%f, %f, %f), d: (%f, %f, %f) } reached the light!\n", shadow_ray->origin.x, shadow_ray->origin.y,
-            //        shadow_ray->origin.z, shadow_ray->direction.x, shadow_ray->direction.y, shadow_ray->direction.z);
-        }
-        free(shadow_ray);
     }
     return closest_;
 }

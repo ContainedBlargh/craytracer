@@ -13,6 +13,7 @@
  */
 
 #include "sphere.h"
+#include "plane.h"
 #include "camera.h"
 #include "light.h"
 
@@ -22,8 +23,9 @@ Scene* new_scene();
 Camera *scene_get_camera(Scene *scene);
 void scene_set_camera(Scene *scene, Camera *camera);
 void scene_add_sphere(Scene *scene, Sphere *sphere);
+void scene_add_plane(Scene *scene, Plane *plane);
 void scene_add_light(Scene *scene, Light light);
-HitOption scene_intersect(Scene *scene, Ray *ray);
+HitOption trace_ray(Scene *scene, Ray *ray);
 void scene_free(Scene *scene);
 void scene_debug_print(Scene *scene);
 #endif

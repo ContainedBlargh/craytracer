@@ -25,4 +25,10 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
+#define eps 0.000001f
+#define max(a, b) (a) > (b) ? a : b
+#define min(a, b) (a) < (b) ? a : b
+#define fcmp(a, b) (a - b > eps) ? 1 : (b - a > eps) ? -1 : 0
+#define feq(a, b) (fcmp(a, b) == 0)
+
 #endif

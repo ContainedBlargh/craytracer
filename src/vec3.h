@@ -33,6 +33,8 @@ f32 dot(Vec3 a, Vec3 b);
 
 Vec3 smul(Vec3 v, f32 s);
 
+Vec3 vmul(Vec3 a, Vec3 b);
+
 Vec3 vadd(Vec3 a, Vec3 b);
 
 Vec3 vsub(Vec3 a, Vec3 b);

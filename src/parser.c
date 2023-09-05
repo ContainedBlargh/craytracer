@@ -80,13 +80,22 @@ void parse_shapes(Scene *scene, cJSON *root)
 
         cJSON *type = cJSON_GetObjectItem(shape, "type");
 
-        if (strcasecmp(type->valuestring, "sphere") == 0) {
+        if (strcmp(type->valuestring, "sphere") == 0) {
             cJSON *color = cJSON_GetObjectItem(shape, "color");
             cJSON *radius = cJSON_GetObjectItem(shape, "radius");
             cJSON *center = cJSON_GetObjectItem(shape, "center");
 
             Sphere *sphere = new_sphere(parse_vec3(center), radius->valuedouble, parse_vec3(color));
             scene_add_sphere(scene, sphere);
+        }
+
+        if (strcmp(type->valuestring, "plane") == 0) {
+            cJSON *color = cJSON_GetObjectItem(shape, "color");
+            cJSON *normal = cJSON_GetObjectItem(shape, "normal");
+            cJSON *pivot = cJSON_GetObjectItem(shape, "pivot");
+            
+            Plane *plane = new_plane(parse_vec3(pivot), parse_vec3(normal), parse_vec3(color));
+            scene_add_plane(scene, plane);
         }
     }
 }
