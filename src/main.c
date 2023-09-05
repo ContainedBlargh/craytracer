@@ -16,6 +16,7 @@
 #endif
 
 static u8 cpu_count = 12;
+static u8 batch_size = 3;
 
 typedef struct _RayWorkerArgs
 {
@@ -43,10 +44,10 @@ int fire_rays(void *args)
 
     HitOption hit_;
     printf("rw[%hu]: Firing %llu rays.\n", wargs->id, amount);
-    for (u32 i = offset; i < offset + amount; i += 3)
+    for (u32 i = offset; i < offset + amount; i += batch_size)
     {
         SDL_LockSurface(canvas);
-        for (u32 j = 0; j < 3; j++)
+        for (u32 j = 0; j < batch_size; j++)
         {
             hit_ = trace_ray(scene, rays + i + j);
             if (is_some(hit_))
@@ -140,8 +141,9 @@ int main(int argc, char *argv[])
     int opt;
     u32 window_w = 1792, w = 1792, window_h = 768, h = 768;
     char *input_file = NULL;
+    bool debug = false;
 
-    while ((opt = getopt(argc, argv, "w:h:c:i:")) != -1)
+    while ((opt = getopt(argc, argv, "w:h:c:b:d:i:")) != -1)
     {
         switch (opt)
         {
@@ -154,11 +156,17 @@ int main(int argc, char *argv[])
         case 'c':
             cpu_count = atoi(optarg);
             break;
+        case 'b':
+            batch_size = atoi(optarg);
+            break;
+        case 'd':
+            debug = true;
+            break;
         case 'i':
             input_file = optarg;
             break;
         default:
-            fprintf(stderr, "Usage: %s [-w width] [-h height] [-c cpu_count] -i <input_scene.json>\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-w width] [-h height] [-c cpu_count] [-b batch_size] [-d] -i <input_scene.json>\n", argv[0]);
             exit(EXIT_FAILURE);
         }
     }
@@ -166,12 +174,14 @@ int main(int argc, char *argv[])
     if (input_file == NULL)
     {
         fprintf(stderr, "An input file path is required.\n");
-        fprintf(stderr, "Usage: %s [-w width] [-h height] [-c cpu_count] -i <input_scene.json>\n", argv[0]);
+        fprintf(stderr, "Usage: %s [-w width] [-h height] [-c cpu_count] [-b batch_size] [-d] -i <input_scene.json>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
     Scene *scene = parse_scene(input_file);
-    scene_debug_print(scene);
+    if (debug) {
+        scene_debug_print(scene);
+    }
     SDL_atomic_t *running = malloc(sizeof(SDL_atomic_t));
     running->value = true;
     SDL_atomic_t *buffer_switched = malloc(sizeof(SDL_atomic_t));
