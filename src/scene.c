@@ -61,24 +61,25 @@ static HitOption cast_ray(Scene *scene, Ray *ray)
     }
     HitOption closest_ = no_Hit();
     f32 closest_dist = 999999.0f;
-    for (u16 i = 0; i < scene->planes->size; i++)
-    {
-        Plane *p = scene->planes->elements[i];
-        HitOption current_ = plane_intersect(p, ray);
-        if (is_some(current_) && current_.value.distance < closest_dist) {
-            closest_ = current_;
-        }
-    }
     for (u16 i = 0; i < scene->spheres->size; i++)
     {
         Sphere *s = scene->spheres->elements[i];
         HitOption current_ = sphere_intersect(s, ray);
-        if (is_some(current_) && current_.value.distance < closest_dist)
+        if (is_some(current_) && current_.value.distance <= closest_dist)
         {
+            closest_dist = current_.value.distance;
             closest_ = current_;
         }
     }
-    
+    for (u16 i = 0; i < scene->planes->size; i++)
+    {
+        Plane *p = scene->planes->elements[i];
+        HitOption current_ = plane_intersect(p, ray);
+        if (is_some(current_) && current_.value.distance <= closest_dist) {
+            closest_dist = current_.value.distance;
+            closest_ = current_;
+        }
+    }
     return closest_;
 }
 
@@ -102,12 +103,12 @@ HitOption trace_ray(Scene *scene, Ray *ray)
             if (is_none(shadow_hit_))
             {
                 reached_by_light = true;
-                closest_.value.color = color_mix(closest_.value.color, l.color);
+                closest_.value.color = closest_.value.color;
             }
         }
         if (!reached_by_light)
         {
-            closest_.value.color = smul(closest_.value.color, 0.5);
+            closest_.value.color = vec3(0.0, 0.0, 0.0);
         }
     }
     return closest_;
@@ -154,6 +155,21 @@ void scene_debug_print(Scene *scene)
             scene->spheres->elements[i]->color.x,
             scene->spheres->elements[i]->color.y,
             scene->spheres->elements[i]->color.z
+        );
+    }
+    printf("Scene has %u planes:\n", scene->planes->size);
+    for(u32 i = 0; i < scene->planes->size; i++) {
+        printf(
+            "\tPlane: { p: (%.2f, %.2f, %.2f), n: (%.2f, %.2f, %.2f), c: (%.2f, %.2f, %.2f) }\n",
+            scene->planes->elements[i]->pivot.x,
+            scene->planes->elements[i]->pivot.y,
+            scene->planes->elements[i]->pivot.z,
+            scene->planes->elements[i]->normal.x,
+            scene->planes->elements[i]->normal.y,
+            scene->planes->elements[i]->normal.z,
+            scene->planes->elements[i]->color.x,
+            scene->planes->elements[i]->color.y,
+            scene->planes->elements[i]->color.z
         );
     }
 }

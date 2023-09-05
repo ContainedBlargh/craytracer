@@ -83,7 +83,6 @@ int render(void *args)
     Scene *scene = rargs->scene;
     Camera *camera = scene_get_camera(scene); // new_camera(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
     Ray *rays = setup_perspective_rays(camera, canvas->w, canvas->h);
-    scene_debug_print(scene);
 
     SDL_Thread **workers = calloc(cpu_count, sizeof(SDL_Thread *));
     RayWorkerArgs **wargs = calloc(cpu_count, sizeof(RayWorkerArgs *));
@@ -196,6 +195,7 @@ int main(int argc, char *argv[])
     SDL_PixelFormat *fmt = canvas->format;
     // Awful casting, but silences the warnings.
     color_register_format(fmt, (u32(*)(void *, u8, u8, u8)) & SDL_MapRGB);
+    printf("color (1.0, 1.0, 1.0) -> %u\n", color_to_pixel(vec3(1.0, 1.0, 1.0)));
     RenderArgs *rargs = malloc(sizeof(RenderArgs));
     rargs->buffer_switched = buffer_switched;
     rargs->running = running;

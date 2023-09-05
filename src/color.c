@@ -17,7 +17,7 @@ u32 color_to_pixel(Color color)
     if (global_format == NULL) failwith("Color pixelformat not set!");
     if (pixel_fun == NULL) failwith("Color pixelformat not set!");
     Color nc = vabs(norm(color));
-    return pixel_fun(global_format, (u8)(nc.x * 255), (u8)(nc.y * 255), (u8)(nc.z * 255));
+    return pixel_fun(global_format, (u8)truncf(nc.x * 255.0f), (u8)truncf(nc.y * 255.0f), (u8)truncf(nc.z * 255.0f));
 }
 
 Color color_mix(Color a, Color b)

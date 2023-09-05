@@ -24,7 +24,7 @@ HitOption plane_intersect(Plane * plane, Ray * ray) {
 
     Vec3 hit_position = vadd(ray->origin, smul(ray->direction, t));
     return some_Hit((Hit) {
-        .distance = t,
+        .distance = dist(ray->origin, hit_position),
         .position = hit_position,
         .norm = plane->normal,
         .color = plane->color

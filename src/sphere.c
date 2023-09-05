@@ -37,9 +37,13 @@ HitOption sphere_intersect(Sphere *sphere, Ray *ray)
 
     Vec3 hit_point = vadd(ray->origin, smul(ray->direction, distance));
     Vec3 hit_norm = norm(vsub(hit_point, sphere->center));
+    Vec3 hit_to_center_vec = norm(vsub(sphere->center, hit_point));
+    if (dot(hit_norm, hit_to_center_vec) < 0.1) {
+        hit_norm = smul(hit_norm, -1.0f);
+    }
     return some_Hit((Hit) {
         .color = sphere->color,
-        .distance = distance,
+        .distance = dist(ray->origin, hit_point),
         .position = hit_point,
         .norm = hit_norm
     });
