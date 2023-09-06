@@ -9,17 +9,17 @@
  * @date 2023-08-27
  *
  * @copyright WingCorp (c) 2023
- * 
+ *
  */
 
-#include "sphere.h"
-#include "plane.h"
 #include "camera.h"
 #include "light.h"
+#include "plane.h"
+#include "sphere.h"
 
 typedef struct _Scene Scene;
 
-Scene* new_scene();
+Scene *new_scene();
 Camera *scene_get_camera(Scene *scene);
 void scene_set_camera(Scene *scene, Camera *camera);
 void scene_add_sphere(Scene *scene, Sphere *sphere);

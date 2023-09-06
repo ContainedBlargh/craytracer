@@ -3,18 +3,38 @@
 #include "list.h"
 
 #ifndef SpherePtrList_T
+#define SpherePtrList_T
+
 typedef Sphere *SpherePtr;
 list_type(SpherePtr);
-#define SpherePtrList_T
+#define sphere_by_x(sphere) (i32)((sphere->center.x)*2)
+#define sphere_by_y(sphere) (i32)((sphere->center.y)*2)
+#define sphere_by_z(sphere) (i32)((sphere->center.z)*2)
+list_define_sort_by(SpherePtr, x, sphere_by_x);
+list_define_sort_by(SpherePtr, y, sphere_by_y);
+list_define_sort_by(SpherePtr, z, sphere_by_z);
+
 #endif
+
 #ifndef LightList_T
-list_type(Light);
 #define LightList_T
+
+list_type(Light);
+
 #endif
-typedef Plane* PlanePtr;
+
 #ifndef PlanePtrList_T
 #define PlanePtrList_T
+
+typedef Plane* PlanePtr;
 list_type(PlanePtr);
+#define plane_by_x(plane) (i32)((plane->pivot.x)*2)
+#define plane_by_y(plane) (i32)((plane->pivot.y)*2)
+#define plane_by_z(plane) (i32)((plane->pivot.z)*2)
+list_define_sort_by(PlanePtr, x, plane_by_x);
+list_define_sort_by(PlanePtr, y, plane_by_y);
+list_define_sort_by(PlanePtr, z, plane_by_z);
+
 #endif
 
 typedef struct _Scene

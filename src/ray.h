@@ -20,4 +20,6 @@ typedef struct __attribute__((packed)) _Ray
     Vec3 direction;
 } Ray;
 
+bool slabs(Vec3 p0, Vec3 p1, Ray ray);
+
 #endif

@@ -4,21 +4,20 @@
  * @file plane.h
  * @author Jon Voigt Tøttrup (jvoi@itu.dk)
  *
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2023-09-05
  *
  * @copyright WingCorp (c) 2023
- * 
+ *
  */
 
-#include "vec3.h"
+#include "color.h"
 #include "hit.h"
 #include "ray.h"
-#include "color.h"
+#include "vec3.h"
 
-typedef struct _Plane
-{
+typedef struct _Plane {
     Vec3 pivot;
     Vec3 normal;
     Color color;

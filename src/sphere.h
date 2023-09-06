@@ -9,22 +9,21 @@
  * @date 2023-08-23
  *
  * @copyright WingCorp (c) 2023
- * 
+ *
  */
 
-#include "vec3.h"
+#include "color.h"
 #include "hit.h"
 #include "ray.h"
-#include "color.h"
+#include "vec3.h"
 
-typedef struct _Sphere
-{
+typedef struct _Sphere {
     Vec3 center;
     f32 radius;
     Color color;
 } Sphere;
 
-Sphere* new_sphere(Vec3 center, f32 radius, Color color);
+Sphere *new_sphere(Vec3 center, f32 radius, Color color);
 
 HitOption sphere_intersect(Sphere *sphere, Ray *ray);
 

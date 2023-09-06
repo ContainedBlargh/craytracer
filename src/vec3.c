@@ -51,3 +51,11 @@ Vec3 cross(Vec3 a, Vec3 b) {
 Vec3 vabs(Vec3 v) {
     return vec3(fabsf(v.x), fabsf(v.y), fabsf(v.z));
 }
+
+f32 vmin(Vec3 v) {
+    return min(min(v.x, v.y), v.z);
+}
+
+f32 vmax(Vec3 v) {
+    return max(max(v.x, v.y), v.z);
+}

@@ -1,0 +1,81 @@
+# .clang-format configuration file
+
+# Use the LLVM coding style
+BasedOnStyle: LLVM
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Column limit (adjust as needed)
+ColumnLimit: 80
+
+# Continuation indent for line wrapping
+ContinuationIndentWidth: 4
+
+# Spaces before and after C++ style cast operators
+SpaceBeforeCStyleCast: false
+SpaceAfterCStyleCast: false
+
+# Align trailing comments
+AlignTrailingComments: true
+
+# Keep the column alignment of declaration names
+AlignConsecutiveDeclarations: true
+
+# Indent cases within a switch statement
+IndentCaseLabels: true
+
+# Keep empty lines
+KeepEmptyLinesAtTheStartOfBlocks: false
+KeepEmptyLinesAtTheEndOfBlocks: false
+
+# Break before binary operators
+BreakBeforeBinaryOperators: All
+
+# Allow short functions to be defined on one line
+AllowShortFunctionsOnASingleLine: Empty
+
+# Indent block comments with respect to the code
+IndentPPDirectives: AfterHash
+
+# Brace style for control statements
+BraceWrapping:
+  AfterFunction: true
+  AfterControlStatement: true
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+
+# Spaces in parentheses
+SpacesInParentheses: Never
+
+# Spaces in square brackets
+SpacesInSquareBrackets: Never
+
+# Spaces in angle brackets
+SpacesInAngles: Never
+
+# Spaces after commas
+SpacesInCStyleCastParentheses: false
+
+# Space after template '<' and before '>'
+SpaceBeforeTemplateArgumentList: false
+
+# Do not break constructor initializers
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+
+# Break after comma in constructor initializer list
+BreakConstructorInitializersBeforeComma: false
+
+# Allow short lambdas to be defined on one line
+AllowShortLambdasOnASingleLine: Empty
+
+# Always break after the return type in function declarations
+AlwaysBreakAfterReturnType: All
+
+# Remove spaces before pointer and reference operators (* and &) in function pointers and references
+SpacesBeforeTrailingComments: 0
+
+# Keep the line breaks within lambda braces
+KeepEmptyLinesBeforeInLambda: false

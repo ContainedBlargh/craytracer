@@ -15,7 +15,6 @@ Camera *new_camera(Vec3 pos, Vec3 dir)
 
 Ray *setup_perspective_rays(Camera *camera, u32 canvas_width, u32 canvas_height)
 {
-    printf("Allocating a lot of rays, actually %u\n", canvas_height * canvas_width);
     Ray *rays = calloc(canvas_width * canvas_height, sizeof(Ray));
     f32 aspect_ratio = (f32)canvas_width / (f32)canvas_height;
     f32 fov = 90.0; // Field of view in degrees

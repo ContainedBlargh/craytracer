@@ -43,4 +43,8 @@ Vec3 cross(Vec3 a, Vec3 b);
 
 Vec3 vabs(Vec3 v);
 
+f32 vmin(Vec3 v);
+
+f32 vmax(Vec3 v);
+
 #endif
